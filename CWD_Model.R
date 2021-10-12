@@ -12,7 +12,7 @@ if(!require(tidyverse)) install.packages(tidyverse)
 if(!require(deSolve)) install.packages(deSolve)
 
 
-# Model Specification (user defined formula) ------------------------------
+# Model Specification (user defined function) ------------------------------
 
 SIEmod <- function(times, State, Pars) {
    
@@ -47,6 +47,7 @@ S0 <- 180
 # Associate every value in beta_vec with every value in mu_vec (combination)
 beta_mu_vals <- expand.grid(beta_vec, mu_vec)
 names(beta_mu_vals) <- c("beta", "mu")
+
 
 
 # Output Storage ----------------------------------------------------------
@@ -90,6 +91,7 @@ for(p in 1:nrow(beta_mu_vals)){
    
    outL <- bind_cols(outL, data.frame(t(matrix(parsSIE))))
    head(outL)
+   
    names(outL)[4:ncol(outL)] <- c("alpha", "m", "gamma", "epsilon",
                                   "tau", "S0", "beta", "mu")
    
