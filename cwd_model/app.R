@@ -87,6 +87,10 @@ get_changed <- function(rv){
                 isolate(rv$cur_mu), isolate(rv$cur_alpha),
                 isolate(rv$cur_m), isolate(rv$cur_gamma),
                 isolate(rv$cur_epsilon), isolate(rv$cur_tau))
+  previous <- c(isolate(rv$pre_beta), 
+                isolate(rv$pre_mu), isolate(rv$pre_alpha),
+                isolate(rv$pre_m), isolate(rv$pre_gamma),
+                isolate(rv$pre_epsilon), isolate(rv$pre_tau))
   start <- c(0.002446, 2.62, 4,
              0.103, 0.21, 0.15, 
              0.136)
@@ -101,9 +105,10 @@ get_changed <- function(rv){
       changed[i] = current[i]
     }
   }
-  df <- data.frame(Parameters, changed, start)
-  changed_df <- subset(df, changed != 0)
-  colnames(changed_df) <- c('Parameter_Name', 'New_Value', 'Original_Value')
+  df <- data.frame(Parameters, changed, start, current, previous)
+  changed_df <- subset(df, (changed != 0 | (changed == 0 & current == 0)))
+  changed_df <- subset(changed_df, select = -c(current))
+  colnames(changed_df) <- c('Parameter Name', 'New Value', 'Original Value', 'Previous Value')
   return(changed_df)
 }
 
@@ -296,9 +301,7 @@ server <- function(input, output, session) {
   rv$pre_gamma <- 0.206146
   rv$pre_epsilon <- 0.150344
   rv$pre_tau <- 0.135785
-  
-  
-  
+ 
   update <- function(rv, input){
     rv$pre_beta <- isolate(rv$cur_beta)
     rv$pre_mu <- isolate(rv$cur_mu)
@@ -323,7 +326,6 @@ server <- function(input, output, session) {
   
   output$plot1 <- renderPlot({
     rv <- update(rv, input)
-    get_changed(rv)
     previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
                              m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
                              tau = isolate(rv$pre_tau))
