@@ -1,7 +1,7 @@
 # App to run CWD Model
 
 library(shiny)
-library(GGally)
+library(shinydashboard)
 
 # Packages
 if(!require(ggplot2)) install.packages(ggplot2)
@@ -110,111 +110,103 @@ get_changed <- function(rv){
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- dashboardPage(
   
-  titlePanel("CWD SEI Model"), 
-  
-  sidebarLayout(
-    sidebarPanel(
-      position = "right",
-      
-      sliderInput(inputId = "beta", 
-                  label = "Transmission Rate", 
-                  min = 0, 
-                  value = 0.002446, 
-                  max = 1, 
-                  step = 0.001),
-      numericInput("beta2", "", 
-                   min = 0, 
-                   value = 0.002446, 
-                   max = 1),
-      
-      sliderInput(inputId = "mu", 
-                  label = "CWD Morality Rate", 
-                  min = 0, 
-                  value = 2.617254, 
-                  max = 3,
-                  step = 0.05),
-      numericInput("mu2", "", 
-                   min = 0, 
-                   value = 2.617254, 
-                   max = 3),
-      
-      sliderInput(inputId = "time", 
-                  label = "Time", 
-                  min = 0, 
-                  value = 20, 
-                  max = 50,
-                  step = 5),
-      numericInput("time2", "",  
-                   min = 0, 
-                   value = 20, 
-                   max = 50),
-      
-      sliderInput(inputId = "alpha", 
-                  label = "Birth Rate", 
-                  min = 0, 
-                  value = 4.48307, 
-                  max = 10, 
-                  step = 1),
-      numericInput("alpha2", "", 
-                   min = 0, 
-                   value = 4.48307, 
-                   max = 10),
-      
-      sliderInput(inputId = "m", 
-                  label = "Natural Morality Rate", 
-                  min = 0, 
-                  value = 0.103202, 
-                  max = 1,
-                  step = 0.001),
-      numericInput("m2", "", 
-                   min = 0, 
-                   value = 0.103202, 
-                   max = 1),
-      
-      sliderInput(inputId = "gamma", 
-                  label = "Indirect Transmission", 
-                  min = 0, 
-                  value = 0.206146, 
-                  max = 5,
-                  step = .01),
-      numericInput("gamma2", "", 
-                   min = 0, 
-                   value = 0.206146, 
-                   max = 5),
-      
-      sliderInput(inputId = "epsilon", 
-                  label = "Rate of Infectious Material Excretion", 
-                  min = 0, 
-                  value = 0.150344, 
-                  max = 5, 
-                  step = .001), 
-      numericInput("epsilon2", "", 
-                   min = 0, 
-                   value = 0.150344, 
-                   max = 5),
-      
-      sliderInput(inputId = "tau", 
-                  label = "Enviromental Infectious Material Loss Rate" , 
-                  min = 0, 
-                  value = 0.135785, 
-                  max = 5,
-                  step = 0.001),
-      numericInput("tau2", "", 
-                   value = 0.135785, 
-                   min = 0, 
-                   max = 5),
-      
-    ),
-    
-    mainPanel(
-      tabsetPanel(type = "tabs",
-                  tabPanel("Line", plotOutput("plot1")),
-                  #tabPanel("Scatter", plotOutput("plot2")),
-                  #tabPanel("Bar", plotOutput("plot3")),
-                  tabPanel("Table", DT::dataTableOutput("data"))
-      )
+  dashboardHeader(title = "CWD SEI Model"),
+  dashboardSidebar(disable = TRUE),
+  dashboardBody(
+    fluidRow(column(12, wellPanel(plotOutput("plot1")))),
+    fluidRow(
+      column(6,
+             wellPanel(title = "Inputs",
+                 sliderInput(inputId = "beta", 
+                             label = "Transmission Rate", 
+                             min = 0, 
+                             value = 0.002446, 
+                             max = 1, 
+                             step = 0.001),
+                 numericInput("beta2", "", 
+                              min = 0, 
+                              value = 0.002446, 
+                              max = 1),
+                 
+                 sliderInput(inputId = "mu", 
+                             label = "CWD Morality Rate", 
+                             min = 0, 
+                             value = 2.617254, 
+                             max = 3,
+                             step = 0.05),
+                 numericInput("mu2", "", 
+                              min = 0, 
+                              value = 2.617254, 
+                              max = 3),
+                 
+                 sliderInput(inputId = "time", 
+                             label = "Time", 
+                             min = 0, 
+                             value = 20, 
+                             max = 50,
+                             step = 5),
+                 numericInput("time2", "",  
+                              min = 0, 
+                              value = 20, 
+                              max = 50),
+                 
+                 sliderInput(inputId = "alpha", 
+                             label = "Birth Rate", 
+                             min = 0, 
+                             value = 4.48307, 
+                             max = 10, 
+                             step = 1),
+                 numericInput("alpha2", "", 
+                              min = 0, 
+                              value = 4.48307, 
+                              max = 10),
+                 
+                 sliderInput(inputId = "m", 
+                             label = "Natural Morality Rate", 
+                             min = 0, 
+                             value = 0.103202, 
+                             max = 1,
+                             step = 0.001),
+                 numericInput("m2", "", 
+                              min = 0, 
+                              value = 0.103202, 
+                              max = 1),
+                 
+                 sliderInput(inputId = "gamma", 
+                             label = "Indirect Transmission", 
+                             min = 0, 
+                             value = 0.206146, 
+                             max = 5,
+                             step = .01),
+                 numericInput("gamma2", "", 
+                              min = 0, 
+                              value = 0.206146, 
+                              max = 5),
+                 
+                 sliderInput(inputId = "epsilon", 
+                             label = "Rate of Infectious Material Excretion", 
+                             min = 0, 
+                             value = 0.150344, 
+                             max = 5, 
+                             step = .001), 
+                 numericInput("epsilon2", "", 
+                              min = 0, 
+                              value = 0.150344, 
+                              max = 5),
+                 
+                 sliderInput(inputId = "tau", 
+                             label = "Enviromental Infectious Material Loss Rate" , 
+                             min = 0, 
+                             value = 0.135785, 
+                             max = 5,
+                             step = 0.001),
+                 numericInput("tau2", "", 
+                              value = 0.135785, 
+                              min = 0, 
+                              max = 5))),
+      column(6,wellPanel(DT::dataTableOutput("data")))
     )
   )
 )
@@ -343,54 +335,6 @@ server <- function(input, output, session) {
       ylab("Number of infectious hosts") + 
       xlab("Time") + geom_line(size = 1, color = "red") +
       geom_line(data = previous, aes(x = time, y = Number, group = mu, color = mu), size = 1, color = "blue") +
-      ylim(min(previous$Number, current$Number), max(previous$Number, current$Number)) +
-      theme_bw() +
-      theme(text = element_text(size = 20), 
-            strip.background = element_blank())
-    
-    #this will adjust the length of the x axis however it only does it after another variable is changed
-    SIE_plot <- SIE_plot + xlim(min(previous$time, current$time), max(previous$time, current$time))
-    SIE_plot
-    
-  })
-  
-  output$plot2 <- renderPlot({
-    rv <- update(rv, input)
-    get_changed(rv)
-    previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
-                             m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
-                             tau = isolate(rv$pre_tau))
-    current <- model_output(isolate(input$time), beta = isolate(rv$cur_beta), mu = isolate(rv$cur_mu), alpha = isolate(rv$cur_alpha),
-                            m = isolate(rv$cur_m), gamma = isolate(rv$cur_gamma), epsilon = isolate(rv$cur_epsilon), tau = isolate(rv$cur_tau))
-    
-    
-    SIE_plot <-  ggplot(data = current, aes(x = time, y = Number, group = mu, color = mu)) +
-      ylab("Number of infectious hosts") + 
-      xlab("Time") + geom_point()+
-      ylim(min(previous$Number, current$Number), max(previous$Number, current$Number)) +
-      theme_bw() +
-      theme(text = element_text(size = 20), 
-            strip.background = element_blank())
-    
-    #this will adjust the length of the x axis however it only does it after another variable is changed
-    SIE_plot <- SIE_plot + xlim(min(previous$time, current$time), max(previous$time, current$time))
-    SIE_plot
-    
-  })
-  
-  output$plot3 <- renderPlot({
-    rv <- update(rv, input)
-    get_changed(rv)
-    previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
-                             m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
-                             tau = isolate(rv$pre_tau))
-    current <- model_output(isolate(input$time), beta = isolate(rv$cur_beta), mu = isolate(rv$cur_mu), alpha = isolate(rv$cur_alpha),
-                            m = isolate(rv$cur_m), gamma = isolate(rv$cur_gamma), epsilon = isolate(rv$cur_epsilon), tau = isolate(rv$cur_tau))
-    
-    
-    SIE_plot <-  ggplot(data = current, aes(x = time, y = Number, group = mu, color = mu)) +
-      ylab("Number of infectious hosts") + 
-      xlab("Time") +  geom_bar(stat="identity") +
       ylim(min(previous$Number, current$Number), max(previous$Number, current$Number)) +
       theme_bw() +
       theme(text = element_text(size = 20), 
