@@ -362,7 +362,6 @@ server <- function(input, output, session) {
   
   output$plot1 <- renderPlot({
     rv <- update(rv, input)
-    get_changed(rv)
     previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
                              m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
                              tau = isolate(rv$pre_tau))
