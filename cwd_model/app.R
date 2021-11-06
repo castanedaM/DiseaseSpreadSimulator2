@@ -305,6 +305,10 @@ server <- function(input, output, session) {
   rv$pre_epsilon <- 0.150344
   rv$pre_tau <- 0.135785
  
+  update_time <- function(rv, input){
+    rv$cur_time <- input$time
+  }
+  
   update <- function(rv, input){
     rv$pre_beta <- isolate(rv$cur_beta)
     rv$pre_mu <- isolate(rv$cur_mu)
@@ -387,12 +391,13 @@ server <- function(input, output, session) {
     SIE_plot <- SIE_plot + xlim(min(previous$time, current$time), max(previous$time, current$time))
     
     if(isolate(input$time) != isolate(rv$cur_time)){
-      rv <- update(rv, input)
+      rv <- update_time(rv, input)
     }
     SIE_plot
   })
   
   output$data <- DT::renderDataTable({
+    
     rv_dt <- update_dt(rv_dt, input)
     table <- get_changed(rv_dt)
     DT::datatable(table)
