@@ -322,10 +322,47 @@ server <- function(input, output, session) {
     return(rv)
   }
   
+  rv_dt <- reactiveValues()
   
+  rv_dt$cur_beta <- 0.002446
+  rv_dt$cur_mu <- 2.617254 
+  rv_dt$cur_alpha <- 4.48307
+  rv_dt$cur_m <- 0.103202
+  rv_dt$cur_gamma <- 0.206146
+  rv_dt$cur_epsilon <- 0.150344
+  rv_dt$cur_tau <- 0.135785
+  
+  rv_dt$pre_beta <- 0.002446
+  rv_dt$pre_mu <- 2.617254
+  rv_dt$pre_alpha <- 4.48307
+  rv_dt$pre_m <- 0.103202
+  rv_dt$pre_gamma <- 0.206146
+  rv_dt$pre_epsilon <- 0.150344
+  rv_dt$pre_tau <- 0.135785
+  
+  update_dt <- function(rv_dt, input){
+    rv_dt$pre_beta <- isolate(rv_dt$cur_beta)
+    rv_dt$pre_mu <- isolate(rv_dt$cur_mu)
+    rv_dt$pre_alpha <- isolate(rv_dt$cur_alpha)
+    rv_dt$pre_m <- isolate(rv_dt$cur_m)
+    rv_dt$pre_gamma <- isolate(rv_dt$cur_gamma)
+    rv_dt$pre_epsilon <- isolate(rv_dt$cur_epsilon)
+    rv_dt$pre_tau <- isolate(rv_dt$cur_tau)
+    
+    rv_dt$cur_beta <- input$beta
+    rv_dt$cur_mu <- input$mu
+    rv_dt$cur_alpha <- input$alpha
+    rv_dt$cur_m <- input$m
+    rv_dt$cur_gamma <- input$gamma
+    rv_dt$cur_epsilon <- input$epsilon
+    rv_dt$cur_tau <- input$tau
+    
+    return(rv_dt)
+  }
   
   output$plot1 <- renderPlot({
     rv <- update(rv, input)
+    get_changed(rv)
     previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
                              m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
                              tau = isolate(rv$pre_tau))
@@ -345,12 +382,11 @@ server <- function(input, output, session) {
     #this will adjust the length of the x axis however it only does it after another variable is changed
     SIE_plot <- SIE_plot + xlim(min(previous$time, current$time), max(previous$time, current$time))
     SIE_plot
-    
   })
   
   output$data <- DT::renderDataTable({
-    rv <- update(rv, input)
-    table <- get_changed(rv)
+    rv_dt <- update_dt(rv_dt, input)
+    table <- get_changed(rv_dt)
     DT::datatable(table)
   })
   
