@@ -112,6 +112,7 @@ get_changed <- function(rv){
   return(changed_df)
 }
 
+
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
@@ -148,12 +149,12 @@ ui <- dashboardPage(
                  
                  sliderInput(inputId = "time", 
                              label = "Time", 
-                             min = 0, 
+                             min = 1, 
                              value = 20, 
                              max = 50,
                              step = 5),
                  numericInput("time2", "",  
-                              min = 0, 
+                              min = 1, 
                               value = 20, 
                               max = 50),
                  
@@ -272,6 +273,7 @@ update_all <- function(input, session){
   observe({
     updateSliderInput(session = session, inputId = "tau2",value = input$tau)
   })
+  
 }
 
 
@@ -293,6 +295,7 @@ server <- function(input, output, session) {
   rv$cur_gamma <- 0.206146
   rv$cur_epsilon <- 0.150344
   rv$cur_tau <- 0.135785
+  rv$cur_time <- 20
   
   rv$pre_beta <- 0.002446
   rv$pre_mu <- 2.617254
@@ -310,6 +313,7 @@ server <- function(input, output, session) {
     rv$pre_gamma <- isolate(rv$cur_gamma)
     rv$pre_epsilon <- isolate(rv$cur_epsilon)
     rv$pre_tau <- isolate(rv$cur_tau)
+    rv$cur_time <- input$time
     
     rv$cur_beta <- input$beta
     rv$cur_mu <- input$mu
@@ -361,7 +365,10 @@ server <- function(input, output, session) {
   }
   
   output$plot1 <- renderPlot({
+    if(isolate(input$time) == isolate(rv$cur_time)){
     rv <- update(rv, input)
+    }
+    
     previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
                              m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
                              tau = isolate(rv$pre_tau))
@@ -377,9 +384,11 @@ server <- function(input, output, session) {
       theme_bw() +
       theme(text = element_text(size = 20), 
             strip.background = element_blank())
-    
-    #this will adjust the length of the x axis however it only does it after another variable is changed
     SIE_plot <- SIE_plot + xlim(min(previous$time, current$time), max(previous$time, current$time))
+    
+    if(isolate(input$time) != isolate(rv$cur_time)){
+      rv <- update(rv, input)
+    }
     SIE_plot
   })
   
