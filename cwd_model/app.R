@@ -82,16 +82,16 @@ model_output <- function(time, beta, mu, alpha, m, gamma, epsilon, tau){
   return(model_output)
 }
 
-get_changed <- function(rv){
-  current <- c( isolate(rv$cur_beta), 
-                isolate(rv$cur_mu), isolate(rv$cur_alpha),
-                isolate(rv$cur_m), isolate(rv$cur_gamma),
-                isolate(rv$cur_epsilon), isolate(rv$cur_tau))
-  previous <- c(isolate(rv$pre_beta), 
-                isolate(rv$pre_mu), isolate(rv$pre_alpha),
-                isolate(rv$pre_m), isolate(rv$pre_gamma),
-                isolate(rv$pre_epsilon), isolate(rv$pre_tau))
-  start <- c(0.002446, 2.62, 4,
+get_changed <- function(rv_dt){
+  current <- c( isolate(rv_dt$cur_beta), 
+                isolate(rv_dt$cur_mu), isolate(rv_dt$cur_alpha),
+                isolate(rv_dt$cur_m), isolate(rv_dt$cur_gamma),
+                isolate(rv_dt$cur_epsilon), isolate(rv_dt$cur_tau))
+  previous <- c(isolate(rv_dt$pre_beta), 
+                isolate(rv_dt$pre_mu), isolate(rv_dt$pre_alpha),
+                isolate(rv_dt$pre_m), isolate(rv_dt$pre_gamma),
+                isolate(rv_dt$pre_epsilon), isolate(rv_dt$pre_tau))
+  start <- c(0.002, 2.62, 4,
              0.103, 0.21, 0.15, 
              0.136)
   Parameters <- c("Transmission Rate (beta)", "CWD Morality Rate (mu)", 
@@ -121,19 +121,19 @@ ui <- dashboardPage(
   dashboardHeader(title = "CWD SEI Model"),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
-    fluidRow(column(12, wellPanel(plotOutput("plot1")))),
+    fluidRow(column(10, wellPanel(plotOutput("plot1"))), column(2, actionButton("button", "Reset Inputs"))),
     fluidRow(
       column(6,
              wellPanel(title = "Inputs",
                  sliderInput(inputId = "beta", 
                              label = "Transmission Rate", 
                              min = 0, 
-                             value = 0.002446, 
+                             value = 0.002, 
                              max = 1, 
                              step = 0.001),
                  numericInput("beta2", "", 
                               min = 0, 
-                              value = 0.002446, 
+                              value = 0.002, 
                               max = 1),
                  
                  sliderInput(inputId = "mu", 
@@ -278,6 +278,8 @@ update_all <- function(input, session){
 
 
 
+
+
 # Server ------------------------------------------------------------------
 
 
@@ -286,9 +288,11 @@ server <- function(input, output, session) {
   
   
   update_all(input, session)
+
   rv <- reactiveValues()
+  rv_dt <- reactiveValues()
   
-  rv$cur_beta <- 0.002446
+  rv$cur_beta <- 0.002
   rv$cur_mu <- 2.617254 
   rv$cur_alpha <- 4.48307
   rv$cur_m <- 0.103202
@@ -296,17 +300,22 @@ server <- function(input, output, session) {
   rv$cur_epsilon <- 0.150344
   rv$cur_tau <- 0.135785
   rv$cur_time <- 20
+  rv$reset <- FALSE
   
-  rv$pre_beta <- 0.002446
+  rv$pre_beta <- 0.002
   rv$pre_mu <- 2.617254
   rv$pre_alpha <- 4.48307
   rv$pre_m <- 0.103202
   rv$pre_gamma <- 0.206146
   rv$pre_epsilon <- 0.150344
   rv$pre_tau <- 0.135785
+  rv$pre_time <- 20
  
   update_time <- function(rv, input){
+    rv$pre_time <- isolate(rv$cur_time)
     rv$cur_time <- input$time
+    return(rv)
+  
   }
   
   update <- function(rv, input){
@@ -317,6 +326,8 @@ server <- function(input, output, session) {
     rv$pre_gamma <- isolate(rv$cur_gamma)
     rv$pre_epsilon <- isolate(rv$cur_epsilon)
     rv$pre_tau <- isolate(rv$cur_tau)
+    
+    rv$pre_time <- isolate(rv$cur_time)
     rv$cur_time <- input$time
     
     rv$cur_beta <- input$beta
@@ -330,9 +341,7 @@ server <- function(input, output, session) {
     return(rv)
   }
   
-  rv_dt <- reactiveValues()
-  
-  rv_dt$cur_beta <- 0.002446
+  rv_dt$cur_beta <- 0.002
   rv_dt$cur_mu <- 2.617254 
   rv_dt$cur_alpha <- 4.48307
   rv_dt$cur_m <- 0.103202
@@ -340,7 +349,7 @@ server <- function(input, output, session) {
   rv_dt$cur_epsilon <- 0.150344
   rv_dt$cur_tau <- 0.135785
   
-  rv_dt$pre_beta <- 0.002446
+  rv_dt$pre_beta <- 0.002
   rv_dt$pre_mu <- 2.617254
   rv_dt$pre_alpha <- 4.48307
   rv_dt$pre_m <- 0.103202
@@ -368,17 +377,43 @@ server <- function(input, output, session) {
     return(rv_dt)
   }
   
+  observeEvent(input$button, {
+ 
+    updateNumericInput(session, "beta", value = 0.002)
+    updateNumericInput(session, "mu", value = 2.617254 )
+    updateNumericInput(session, "time", value = 20)
+    updateNumericInput(session, "alpha", value = 4.48307)
+    updateNumericInput(session, "m", value = 0.103202)
+    updateNumericInput(session, "gamma", value = 0.206146)
+    updateNumericInput(session, "epsilon", value =  0.150344)
+    updateNumericInput(session, "tau", value = 0.135785)
+    rv$reset <- TRUE
+  })
+  
   output$plot1 <- renderPlot({
-    if(isolate(input$time) == isolate(rv$cur_time)){
+    
+    rv <- update_time(rv, input)
+    if(isolate(rv$pre_time) == isolate(rv$cur_time)){
+      print("EQUAL")
+      print(paste("New Time: ", isolate(rv$pre_time)))
+      print(paste("Old Time: ", isolate(rv$cur_time)))
     rv <- update(rv, input)
+    } else {
+      print("NOT EQUAL")
+      print(paste("New Time: ", isolate(rv$pre_time)))
+      print(paste("Old Time: ", isolate(rv$cur_time)))
     }
     
-    previous <- model_output(isolate(input$time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
+    if(isolate(rv$reset) == FALSE){
+    previous <- model_output(isolate(rv$cur_time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
                              m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
                              tau = isolate(rv$pre_tau))
-    current <- model_output(isolate(input$time), beta = isolate(rv$cur_beta), mu = isolate(rv$cur_mu), alpha = isolate(rv$cur_alpha),
+    } else {
+    previous <- NULL
+    rv$reset <- FALSE
+    }
+    current <- model_output(isolate(rv$cur_time), beta = isolate(rv$cur_beta), mu = isolate(rv$cur_mu), alpha = isolate(rv$cur_alpha),
                             m = isolate(rv$cur_m), gamma = isolate(rv$cur_gamma), epsilon = isolate(rv$cur_epsilon), tau = isolate(rv$cur_tau))
-    
     
     SIE_plot <-  ggplot(data = current, aes(x = time, y = Number, group = mu, color = mu)) +
       ylab("Number of infectious hosts") + 
@@ -388,12 +423,7 @@ server <- function(input, output, session) {
       theme_bw() +
       theme(text = element_text(size = 20), 
             strip.background = element_blank())
-    SIE_plot <- SIE_plot + xlim(min(previous$time, current$time), max(previous$time, current$time))
-    
-    if(isolate(input$time) != isolate(rv$cur_time)){
-      rv <- update_time(rv, input)
-    }
-    SIE_plot
+    return(SIE_plot)
   })
   
   output$data <- DT::renderDataTable({
