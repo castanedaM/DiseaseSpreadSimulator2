@@ -34,14 +34,14 @@ SIEmod <- function(times, State, Pars) {
 }
 
 
-model_output <- function(time, beta, mu, alpha, m, gamma, epsilon, tau){
+model_output <- function(time, beta, mu, alpha, m, gamma, epsilon, tau, S0, I0, E0){
   
   #alpha <- 4.48307
   #m <- 0.103202
   #gamma <- 0.206146
   #epsilon <- 0.150344
   #tau <- 0.135785
-  S0 <- 1000
+  #S0 <- 1000
   
   parsSIE <- c(alpha = alpha,
                m = m, 
@@ -54,7 +54,10 @@ model_output <- function(time, beta, mu, alpha, m, gamma, epsilon, tau){
   
   times_vec <- seq(0, time, 1)
   
-  out <- as.data.frame(ode(func = SIEmod, y = c(S = S0, I = 0 ,  E =0.0000003),  
+ # out <- as.data.frame(ode(func = SIEmod, y = c(S = S0, I = 0 ,  E =0.0000003),  
+#                           parms = parsSIE, times = times_vec))
+  
+  out <- as.data.frame(ode(func = SIEmod, y = c(S = S0, I = I0 ,  E = E0),  
                            parms = parsSIE, times = times_vec))
   
   names(out)[2:4] <- c("Susceptible", "Infectious", "Virus")
@@ -123,7 +126,7 @@ ui <- dashboardPage(
   dashboardBody(
     fluidRow(
       column(4,
-             wellPanel(title = "Inputs",
+             wellPanel(title = "Parameters",
                        sliderInput(inputId = "beta", 
                                    label = "Transmission Rate", 
                                    min = 0, 
@@ -210,9 +213,45 @@ ui <- dashboardPage(
                        numericInput("tau2", "", 
                                     value = 0.135785, 
                                     min = 0, 
-                                    max = 5))),
-      column(6, wellPanel(plotOutput("plot1")), column(12,wellPanel(DT::dataTableOutput("data")))), 
-      column(2, actionButton("button", "Reset Inputs")))
+                                    max = 5))
+             ),
+      column(6, wellPanel(plotOutput("plot1")), 
+      column(12,wellPanel(DT::dataTableOutput("data")))), 
+      column(2, actionButton("button", "Reset Inputs"), wellPanel(title = "Scaling Values",
+                                                                   sliderInput(inputId = "S", 
+                                                                               label = "Susceptible Deer", 
+                                                                               min = 0, 
+                                                                               value = 1000, 
+                                                                               max = 2000, 
+                                                                               step = 50),
+                                                                   numericInput("S2", "", 
+                                                                                min = 0, 
+                                                                                value = 1000, 
+                                                                                max = 2000),
+                                                                   
+                                                                   sliderInput(inputId = "I", 
+                                                                               label = "Infected Deer", 
+                                                                               min = 0, 
+                                                                               value = 0, 
+                                                                               max = 2000,
+                                                                               step = 50),
+                                                                   numericInput("I2", "", 
+                                                                                min = 0, 
+                                                                                value =0, 
+                                                                                max = 2000),
+                                                                   
+                                                                   sliderInput(inputId = "E", 
+                                                                               label = "Mass of Infectious Material", 
+                                                                               min = 0, 
+                                                                               value = .005, 
+                                                                               max = 1,
+                                                                               step = .001),
+                                                                   numericInput("E2", "",  
+                                                                                min = 0, 
+                                                                                value = .005, 
+                                                                                max = 1))
+      )
+  )
   )
 )
 
@@ -273,6 +312,27 @@ update_all <- function(input, session){
     updateSliderInput(session = session, inputId = "tau2",value = input$tau)
   })
   
+  observe({
+    updateSliderInput(session = session,inputId = "S",value = input$S2)
+  })
+  observe({
+    updateSliderInput(session = session, inputId = "S2",value = input$S)
+  })
+  
+  observe({
+    updateSliderInput(session = session,inputId = "I",value = input$I2)
+  })
+  observe({
+    updateSliderInput(session = session, inputId = "I2",value = input$I)
+  })
+  
+  observe({
+    updateSliderInput(session = session,inputId = "E",value = input$E2)
+  })
+  observe({
+    updateSliderInput(session = session, inputId = "E2",value = input$E)
+  })
+  
 }
 
 
@@ -309,10 +369,43 @@ server <- function(input, output, session) {
   rv$pre_epsilon <- 0.150344
   rv$pre_tau <- 0.135785
   rv$pre_time <- 20
+  
+  rv$cur_S <- 1000
+  rv$cur_I <- 0
+  rv$cur_E <-  .005
+  
+  rv$pre_S <- 1000
+  rv$pre_I<- 0
+  rv$pre_E <-  .005
  
   update_time <- function(rv, input){
     rv$pre_time <- isolate(rv$cur_time)
     rv$cur_time <- input$time
+    
+    
+    rv$pre_beta <- isolate(rv$pre_beta)
+    rv$pre_mu <- isolate(rv$pre_mu)
+    rv$pre_alpha <- isolate(rv$pre_alpha)
+    rv$pre_m <- isolate(rv$pre_m)
+    rv$pre_gamma <- isolate(rv$pre_gamma)
+    rv$pre_epsilon <- isolate(rv$pre_epsilon)
+    rv$pre_tau <- isolate(rv$pre_tau)
+    
+    rv$cur_beta <- isolate(rv$cur_beta)
+    rv$cur_mu <- isolate(rv$cur_mu)
+    rv$cur_alpha <- isolate(rv$cur_alpha)
+    rv$cur_m <- isolate(rv$cur_m)
+    rv$cur_gamma <- isolate(rv$cur_gamma)
+    rv$cur_epsilon <- isolate(rv$cur_epsilon)
+    rv$cur_tau <- isolate(rv$cur_tau)
+    
+    rv$pre_S <- isolate(rv$cur_S)
+    rv$cur_S <- input$S
+    rv$pre_I<- isolate(rv$cur_I)
+    rv$cur_I <- input$I
+    rv$pre_E <- isolate(rv$cur_E)
+    rv$cur_E <- input$E
+    
     return(rv)
   
   }
@@ -329,6 +422,7 @@ server <- function(input, output, session) {
     rv$pre_time <- isolate(rv$cur_time)
     rv$cur_time <- input$time
     
+
     rv$cur_beta <- input$beta
     rv$cur_mu <- input$mu
     rv$cur_alpha <- input$alpha
@@ -377,7 +471,6 @@ server <- function(input, output, session) {
   }
   
   observeEvent(input$button, {
- 
     updateNumericInput(session, "beta", value = 0.002)
     updateNumericInput(session, "mu", value = 2.617254 )
     updateNumericInput(session, "time", value = 20)
@@ -386,11 +479,16 @@ server <- function(input, output, session) {
     updateNumericInput(session, "gamma", value = 0.206146)
     updateNumericInput(session, "epsilon", value =  0.150344)
     updateNumericInput(session, "tau", value = 0.135785)
+    
+    
+    updateNumericInput(session, "S", value = 1000)
+    updateNumericInput(session, "I", value =  0)
+    updateNumericInput(session, "E", value = 0.005)
     rv$reset <- TRUE
   })
   
   output$plot1 <- renderPlot({
-    
+    print("Creating plot")
     rv <- update_time(rv, input)
     if(isolate(rv$pre_time) == isolate(rv$cur_time)){
       print("EQUAL")
@@ -402,17 +500,18 @@ server <- function(input, output, session) {
       print(paste("New Time: ", isolate(rv$pre_time)))
       print(paste("Old Time: ", isolate(rv$cur_time)))
     }
-    
+
     if(isolate(rv$reset) == FALSE){
-    previous <- model_output(isolate(rv$cur_time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
+    previous <- model_output(time = isolate(rv$cur_time), beta = isolate(rv$pre_beta), mu = isolate(rv$pre_mu), alpha = isolate(rv$pre_alpha),
                              m = isolate(rv$pre_m), gamma = isolate(rv$pre_gamma), epsilon = isolate(rv$pre_epsilon),
-                             tau = isolate(rv$pre_tau))
+                             tau = isolate(rv$pre_tau), S0 = isolate(rv$pre_S) , I0 = isolate(rv$pre_I), E0 = isolate(rv$pre_E) )
     } else {
     previous <- NULL
     rv$reset <- FALSE
     }
-    current <- model_output(isolate(rv$cur_time), beta = isolate(rv$cur_beta), mu = isolate(rv$cur_mu), alpha = isolate(rv$cur_alpha),
-                            m = isolate(rv$cur_m), gamma = isolate(rv$cur_gamma), epsilon = isolate(rv$cur_epsilon), tau = isolate(rv$cur_tau))
+    current <- model_output(time = isolate(rv$cur_time), beta = isolate(rv$cur_beta), mu = isolate(rv$cur_mu), alpha = isolate(rv$cur_alpha),
+                            m = isolate(rv$cur_m), gamma = isolate(rv$cur_gamma), epsilon = isolate(rv$cur_epsilon), tau = isolate(rv$cur_tau),
+                            S0 = isolate(rv$cur_S) , I0 = isolate(rv$cur_I), E0 = isolate(rv$cur_E))
     
     SIE_plot <-  ggplot(data = current, aes(x = time, y = Number, group = mu, color = mu)) +
       ylab("Number of infectious hosts") + 
@@ -428,11 +527,12 @@ server <- function(input, output, session) {
   })
   
   output$data <- DT::renderDataTable({
-    
     rv_dt <- update_dt(rv_dt, input)
     table <- get_changed(rv_dt)
     DT::datatable(table)
   })
+  
+  
   
 }
 
