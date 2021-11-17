@@ -84,7 +84,7 @@ model_output <-
     
     # Converting to long format for plots
     outL <- out %>%
-      gather(key = Compartment, value = Number,-time) %>%
+      gather(key = Compartment, value = Number, -time) %>%
       data.frame()
     
     # print(outL)
@@ -294,7 +294,7 @@ ui <- navbarPage(
                ),
                
                column(1, offset = 3,
-                      actionButton("button", "Reset All"), ),
+                      actionButton("button", "Reset All"),),
                column(
                  4,
                  h2("Scaling Inputs"),
@@ -370,23 +370,24 @@ ui <- navbarPage(
              )
            ))
   ,
-  tabPanel("Info",
-           h1("About"),
-           br(),
-           div(
-             h2("Background Information"),
-             p(
-               "This web application was developed in order to better understand the spread of the disease known as Chonic Wasting Disease (CWD). CWD is a fatal disease affecting members of the deer family. The disease is
+  tabPanel(
+    "Info",
+    h1("About"),
+    br(),
+    div(
+      h2("Background Information"),
+      p(
+        "This web application was developed in order to better understand the spread of the disease known as Chonic Wasting Disease (CWD). CWD is a fatal disease affecting members of the deer family. The disease is
           extremely contagious because the prions spread through any direct or indirect contact. The prions also have the ability to remain in the surrounding area for long periods of time. Once CWD has entered a specific region,
           it becomes quick to spread making it difficult to prevent spread once it has reached an area. Deer are greatly affected by CWD all over the United States and tracking the spread of this disease could give more insight
           into how to prevent further outbreaks."
-             )
-           ),
-           br(),
-           div(
-             h2("How to Use this Web App"),
-             p(
-               "The user opens up the page to an interface with the sliders set to default settings and a graph showing the resulting output of those default parameters. The table under the graph starts off as completely blank.
+      )
+    ),
+    br(),
+    div(
+      h2("How to Use this Web App"),
+      p(
+        "The user opens up the page to an interface with the sliders set to default settings and a graph showing the resulting output of those default parameters. The table under the graph starts off as completely blank.
              The sliders are on the left hand side of the page and users can see more sliders as they scroll down on the page. There are also text boxes located under each of the sliders, so the user can choose to easily type in
              their desired input. The image below shows the interface the users see when it is first opened up. The user can interact with the interface through the use of the sliders. The sliders can be easily dragged to the left
              or right to correspondingly increase and decrease the value of the parameter. Each slider has a defined minimum and maximum value which has been previously determined through research, so the user cannot go out of
@@ -395,15 +396,14 @@ ui <- navbarPage(
              the user to compare two different graphs easily. Additionally, there is a table under the graph to make it easier for the user to track the changes in parameter values. The table is continually updated as each change
              is made. This allows users the accessibility to the history of the parameters. When a change is made, a row is added to the table. For example, if I were to change the value of CWD Mortality Rate to 2.7 instead,
              then it would be tracked in the table and the graph would change as well."
-             )
-           ),
-           br(),
-           div(
-             h2("Additonal Resources"),
-             p(
-               "For more information please visit the following link."
-             )
-           ))
+      )
+    ),
+    br(),
+    div(
+      h2("Additonal Resources"),
+      p("For more information please visit the following link.")
+    )
+  )
   
 )
 
@@ -573,38 +573,6 @@ server <- function(input, output, session) {
   rv$pre_I <- 0
   rv$pre_E <-  .005
   
-  update_time <- function(rv, input) {
-    rv$pre_time <- isolate(rv$cur_time)
-    rv$cur_time <- input$time
-    
-    
-    rv$pre_beta <- isolate(rv$pre_beta)
-    rv$pre_mu <- isolate(rv$pre_mu)
-    rv$pre_alpha <- isolate(rv$pre_alpha)
-    rv$pre_m <- isolate(rv$pre_m)
-    rv$pre_gamma <- isolate(rv$pre_gamma)
-    rv$pre_epsilon <- isolate(rv$pre_epsilon)
-    rv$pre_tau <- isolate(rv$pre_tau)
-    
-    rv$cur_beta <- isolate(rv$cur_beta)
-    rv$cur_mu <- isolate(rv$cur_mu)
-    rv$cur_alpha <- isolate(rv$cur_alpha)
-    rv$cur_m <- isolate(rv$cur_m)
-    rv$cur_gamma <- isolate(rv$cur_gamma)
-    rv$cur_epsilon <- isolate(rv$cur_epsilon)
-    rv$cur_tau <- isolate(rv$cur_tau)
-    
-    rv$pre_S <- isolate(rv$cur_S)
-    rv$cur_S <- input$S
-    rv$pre_I <- isolate(rv$cur_I)
-    rv$cur_I <- input$I
-    rv$pre_E <- isolate(rv$cur_E)
-    rv$cur_E <- input$E
-    
-    return(rv)
-    
-  }
-  
   update <- function(rv, input) {
     rv$pre_beta <- isolate(rv$cur_beta)
     rv$pre_mu <- isolate(rv$cur_mu)
@@ -616,7 +584,12 @@ server <- function(input, output, session) {
     
     rv$pre_time <- isolate(rv$cur_time)
     rv$cur_time <- input$time
-    
+    rv$pre_S <- isolate(rv$cur_S)
+    rv$cur_S <- input$S
+    rv$pre_I <- isolate(rv$cur_I)
+    rv$cur_I <- input$I
+    rv$pre_E <- isolate(rv$cur_E)
+    rv$cur_E <- input$E
     
     rv$cur_beta <- input$beta
     rv$cur_mu <- input$mu
@@ -668,7 +641,7 @@ server <- function(input, output, session) {
   }
   
   observeEvent(input$button, {
-    enable(id = "button")
+    disable(id = "button")
     rv$reset <- TRUE
     updateNumericInput(session, "beta", value = 0.002)
     updateNumericInput(session, "mu", value = 2.617254)
@@ -683,7 +656,7 @@ server <- function(input, output, session) {
     updateNumericInput(session, "I", value =  0)
     updateNumericInput(session, "E", value = 0.005)
     
-    disable(id = "button")
+    enable(id = "button")
     
   })
   
@@ -692,20 +665,7 @@ server <- function(input, output, session) {
   })
   
   output$plot1 <- renderPlot({
-    print(isolate(input$button))
-    print("Creating plot")
-    rv <- update_time(rv, input)
-    if (isolate(rv$pre_time) == isolate(rv$cur_time)) {
-      print("EQUAL")
-      print(paste("New Time: ", isolate(rv$pre_time)))
-      print(paste("Old Time: ", isolate(rv$cur_time)))
-      rv <- update(rv, input)
-    } else {
-      print("NOT EQUAL")
-      print(paste("New Time: ", isolate(rv$pre_time)))
-      print(paste("Old Time: ", isolate(rv$cur_time)))
-    }
-    
+    rv <- update(rv, input)
     
     previous <-
       model_output(
