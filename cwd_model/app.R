@@ -127,9 +127,9 @@ get_changed <- function(rv_dt) {
     isolate(rv_dt$pre_epsilon),
     isolate(rv_dt$pre_tau)
   )
-  start <- c(0.002, 2.62, 4,
-             0.103, 0.21, 0.15,
-             0.136)
+  start <- c(0.002, 2.6, 4.5,
+             0.1, 0.21, 0.15,
+             0.14)
   Parameters <-
     c(
       "Transmission Rate (beta)",
@@ -174,112 +174,112 @@ ui <- navbarPage(
                  sliderInput(
                    inputId = "beta",
                    label = "Transmission Rate",
-                   min = 0,
+                   min = 0.001,
                    value = 0.002,
-                   max = 1,
-                   step = 0.001
+                   max = 0.003,
+                   step = 0.0005
                  ),
                  numericInput(
                    "beta2",
                    "",
-                   min = 0,
+                   min = 0.001,
                    value = 0.002,
-                   max = 1
+                   max = 0.003
                  ),
                  
                  sliderInput(
                    inputId = "mu",
                    label = "CWD Morality Rate",
-                   min = 0,
-                   value = 2.617254,
-                   max = 3,
-                   step = 0.05
+                   min = 1.3,
+                   value = 2.6,
+                   max = 4,
+                   step = 0.2
                  ),
                  numericInput(
                    "mu2",
                    "",
-                   min = 0,
-                   value = 2.617254,
-                   max = 3
+                   min = 1.3,
+                   value = 2.6,
+                   max = 4
                  ),
                  sliderInput(
                    inputId = "alpha",
                    label = "Birth Rate",
-                   min = 0,
-                   value = 4.48307,
-                   max = 10,
-                   step = 1
+                   min = 2.25,
+                   value = 4.5,
+                   max = 6.75,
+                   step = .25
                  ),
                  numericInput(
                    "alpha2",
                    "",
-                   min = 0,
-                   value = 4.48307,
-                   max = 10
+                   min = 2.25,
+                   value = 4.5,
+                   max = 6.75
                  ),
                  
                  sliderInput(
                    inputId = "m",
                    label = "Natural Morality Rate",
-                   min = 0,
-                   value = 0.103202,
-                   max = 1,
-                   step = 0.001
+                   min = 0.05,
+                   value = 0.1,
+                   max = 0.15,
+                   step = 0.01
                  ),
                  numericInput(
                    "m2",
                    "",
-                   min = 0,
-                   value = 0.103202,
-                   max = 1
+                   min = 0.05,
+                   value = 0.1,
+                   max = .15
                  ),
                  
                  sliderInput(
                    inputId = "gamma",
                    label = "Indirect Transmission",
-                   min = 0,
-                   value = 0.206146,
-                   max = 5,
+                   min = .1,
+                   value = 0.21,
+                   max = .31,
                    step = .01
                  ),
                  numericInput(
                    "gamma2",
                    "",
-                   min = 0,
-                   value = 0.206146,
-                   max = 5
+                   min = .1,
+                   value = 0.21,
+                   max = .31
                  ),
                  
                  sliderInput(
                    inputId = "epsilon",
                    label = "Rate of Infectious Material Excretion",
-                   min = 0,
-                   value = 0.150344,
-                   max = 5,
-                   step = .001
+                   min = .07,
+                   value = 0.15,
+                   max = .23,
+                   step = .01
                  ),
                  numericInput(
                    "epsilon2",
                    "",
-                   min = 0,
-                   value = 0.150344,
-                   max = 5
+                   min = .07,
+                   value = 0.15,
+                   max = .23
                  ),
                  
                  sliderInput(
                    inputId = "tau",
                    label = "Enviromental Infectious Material Loss Rate" ,
-                   min = 0,
-                   value = 0.135785,
-                   max = 5,
-                   step = 0.001
+                   min = .07,
+                   value = 0.14,
+                   max = .21,
+                   step = 0.01
                  ),
                  numericInput(
                    "tau2",
                    "",
-                   value = 0.135785,
-                   min = 0,
-                   max = 5
+                   value = 0.14,
+                   min = .07,
+                   max = .21
                  )
                ),
                width = 3
@@ -288,7 +288,15 @@ ui <- navbarPage(
                tabName = "data",
                box(
                  h2("Plot of Infected Deer Over Time"),
+                 br(),
+                 div(p(
+                   HTML("&emsp;&emsp;"),
+                   span(style = "color:red;", "Current Parameters"),
+                   HTML("&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"),
+                   span(style = "color:blue;", "Previous Parameters")
+                 )),
                  wellPanel(plotOutput("plot1")),
+                 
                  wellPanel(DT::dataTableOutput("data")),
                  width = 8
                ),
@@ -386,22 +394,22 @@ ui <- navbarPage(
     br(),
     div(
       h2("How to Use this Web App"),
-      p(
-        "The user opens up the page to an interface with the sliders set to default settings and a graph showing the resulting output of those default parameters. The table under the graph starts off as completely blank.
-             The sliders are on the left hand side of the page and users can see more sliders as they scroll down on the page. There are also text boxes located under each of the sliders, so the user can choose to easily type in
-             their desired input. The image below shows the interface the users see when it is first opened up. The user can interact with the interface through the use of the sliders. The sliders can be easily dragged to the left
-             or right to correspondingly increase and decrease the value of the parameter. Each slider has a defined minimum and maximum value which has been previously determined through research, so the user cannot go out of
-             these bounds. The user also has the option to type their desired value in a box, but once again it will not take values outside of the given range. The visual representation is a line graph which shows the change in
-             number of infectious hosts over time. There is a red line and a blue line which represent the previous results and the current results of the parameters, correspondingly. The purpose of this functionality is to allow
-             the user to compare two different graphs easily. Additionally, there is a table under the graph to make it easier for the user to track the changes in parameter values. The table is continually updated as each change
-             is made. This allows users the accessibility to the history of the parameters. When a change is made, a row is added to the table. For example, if I were to change the value of CWD Mortality Rate to 2.7 instead,
-             then it would be tracked in the table and the graph would change as well."
+      span(
+        "When first viewing the app, a user may notice a few things. First there are two columns containing mutable values. One (located on the far left) is labled Paramters and contain all the variables which affect the
+           final graph. The second (located on the far right) is labeled as Scalling Inputs and contains values which affect the iniitial scale of the graph. A user can change any of these values the graph will update in real
+           time accordingly. In the middle of the page, there is the graph and table. As indicated above the graph, the red line represents the current graph while the blue line represents the graph before the
+           parameter was changed. Below the graph is the aforementioned table which list the all parameters that are different from the original, preset values. These new values, along with the orinal values and
+           most recent values, are veiwable in the table. Lastly, there is a reset button located at the top left corner of the page. This button clears the table and sets
+           all the Parameters/Scaling Values to their original preset values."
       )
     ),
     br(),
     div(
       h2("Additonal Resources"),
-      p("For more information please visit the following link.")
+      p(
+        "For more information about this project please visit the following",
+        a(href = "https://vtechworks.lib.vt.edu/handle/10919/103298", "link")
+      )
     )
   )
   
@@ -546,23 +554,23 @@ server <- function(input, output, session) {
   rv_dt <- reactiveValues()
   
   rv$cur_beta <- 0.002
-  rv$cur_mu <- 2.617254
-  rv$cur_alpha <- 4.48307
-  rv$cur_m <- 0.103202
-  rv$cur_gamma <- 0.206146
-  rv$cur_epsilon <- 0.150344
-  rv$cur_tau <- 0.135785
+  rv$cur_mu <- 2.6
+  rv$cur_alpha <- 4.5
+  rv$cur_m <- 0.1
+  rv$cur_gamma <- 0.21
+  rv$cur_epsilon <- 0.15
+  rv$cur_tau <- 0.14
   rv$cur_time <- 20
   rv$reset <- TRUE
   rv$save <- FALSE
   
   rv$pre_beta <- 0.002
-  rv$pre_mu <- 2.617254
-  rv$pre_alpha <- 4.48307
-  rv$pre_m <- 0.103202
-  rv$pre_gamma <- 0.206146
-  rv$pre_epsilon <- 0.150344
-  rv$pre_tau <- 0.135785
+  rv$pre_mu <- 2.6
+  rv$pre_alpha <- 4.5
+  rv$pre_m <- 0.1
+  rv$pre_gamma <- 0.21
+  rv$pre_epsilon <- 0.15
+  rv$pre_tau <- 0.14
   rv$pre_time <- 20
   
   rv$cur_S <- 1000
@@ -603,20 +611,20 @@ server <- function(input, output, session) {
   }
   
   rv_dt$cur_beta <- 0.002
-  rv_dt$cur_mu <- 2.617254
-  rv_dt$cur_alpha <- 4.48307
-  rv_dt$cur_m <- 0.103202
-  rv_dt$cur_gamma <- 0.206146
-  rv_dt$cur_epsilon <- 0.150344
-  rv_dt$cur_tau <- 0.135785
+  rv_dt$cur_mu <- 2.6
+  rv_dt$cur_alpha <- 4.5
+  rv_dt$cur_m <- 0.1
+  rv_dt$cur_gamma <- 0.21
+  rv_dt$cur_epsilon <- 0.15
+  rv_dt$cur_tau <- 0.14
   
   rv_dt$pre_beta <- 0.002
-  rv_dt$pre_mu <- 2.617254
-  rv_dt$pre_alpha <- 4.48307
-  rv_dt$pre_m <- 0.103202
-  rv_dt$pre_gamma <- 0.206146
-  rv_dt$pre_epsilon <- 0.150344
-  rv_dt$pre_tau <- 0.135785
+  rv_dt$pre_mu <- 2.6
+  rv_dt$pre_alpha <- 4.5
+  rv_dt$pre_m <- 0.1
+  rv_dt$pre_gamma <- 0.21
+  rv_dt$pre_epsilon <- 0.15
+  rv_dt$pre_tau <- 0.14
   
   update_dt <- function(rv_dt, input) {
     rv_dt$pre_beta <- isolate(rv_dt$cur_beta)
@@ -644,13 +652,13 @@ server <- function(input, output, session) {
     disable(id = "button")
     rv$reset <- TRUE
     updateNumericInput(session, "beta", value = 0.002)
-    updateNumericInput(session, "mu", value = 2.617254)
+    updateNumericInput(session, "mu", value = 2.6)
     updateNumericInput(session, "time", value = 20)
-    updateNumericInput(session, "alpha", value = 4.48307)
-    updateNumericInput(session, "m", value = 0.103202)
-    updateNumericInput(session, "gamma", value = 0.206146)
-    updateNumericInput(session, "epsilon", value =  0.150344)
-    updateNumericInput(session, "tau", value = 0.135785)
+    updateNumericInput(session, "alpha", value = 4.5)
+    updateNumericInput(session, "m", value = 0.1)
+    updateNumericInput(session, "gamma", value = 0.21)
+    updateNumericInput(session, "epsilon", value =  0.15)
+    updateNumericInput(session, "tau", value = 0.14)
     
     updateNumericInput(session, "S", value = 1000)
     updateNumericInput(session, "I", value =  0)
