@@ -13,7 +13,6 @@ if (!require(tidyverse))
 if (!require(deSolve))
   install.packages(deSolve)
 
-
 # Improvements to do:
 # - be able to compare models with different parameters
 # - explain what each parameter does
@@ -84,7 +83,7 @@ model_output <-
     
     # Converting to long format for plots
     outL <- out %>%
-      gather(key = Compartment, value = Number, -time) %>%
+      gather(key = Compartment, value = Number,-time) %>%
       data.frame()
     
     # print(outL)
@@ -301,8 +300,10 @@ ui <- navbarPage(
                  width = 8
                ),
                
-               column(1, offset = 3,
-                      actionButton("button", "Reset All"),),
+               column(1,
+                      offset = 3,
+                      actionButton("button", "Reset All"), ),
+               
                column(
                  4,
                  h2("Scaling Inputs"),
@@ -422,9 +423,9 @@ update_all <- function(input, session) {
                       value = input$beta2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "beta2",
-                      value = input$beta)
+    updateNumericInput(session = session,
+                       inputId = "beta2",
+                       value = input$beta)
   })
   
   observe({
@@ -433,21 +434,11 @@ update_all <- function(input, session) {
                       value = input$mu2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "mu2",
-                      value = input$mu)
+    updateNumericInput(session = session,
+                       inputId = "mu2",
+                       value = input$mu)
   })
   
-  observe({
-    updateSliderInput(session = session,
-                      inputId = "time",
-                      value = input$time2)
-  })
-  observe({
-    updateSliderInput(session = session,
-                      inputId = "time2",
-                      value = input$time)
-  })
   
   observe({
     updateSliderInput(session = session,
@@ -455,9 +446,9 @@ update_all <- function(input, session) {
                       value = input$alpha2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "alpha2",
-                      value = input$alpha)
+    updateNumericInput(session = session,
+                       inputId = "alpha2",
+                       value = input$alpha)
   })
   
   observe({
@@ -466,9 +457,9 @@ update_all <- function(input, session) {
                       value = input$m2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "m2",
-                      value = input$m)
+    updateNumericInput(session = session,
+                       inputId = "m2",
+                       value = input$m)
   })
   
   observe({
@@ -477,9 +468,9 @@ update_all <- function(input, session) {
                       value = input$epsilon2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "epsilon2",
-                      value = input$epsilon)
+    updateNumericInput(session = session,
+                       inputId = "epsilon2",
+                       value = input$epsilon)
   })
   
   observe({
@@ -488,9 +479,9 @@ update_all <- function(input, session) {
                       value = input$gamma2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "gamma2",
-                      value = input$gamma)
+    updateNumericInput(session = session,
+                       inputId = "gamma2",
+                       value = input$gamma)
   })
   
   observe({
@@ -499,9 +490,25 @@ update_all <- function(input, session) {
                       value = input$tau2)
   })
   observe({
+    updateNumericInput(session = session,
+                       inputId = "tau2",
+                       value = input$tau)
+  })
+  
+  
+  
+}
+
+update_SIE <- function(input, session) {
+  observe({
     updateSliderInput(session = session,
-                      inputId = "tau2",
-                      value = input$tau)
+                      inputId = "time",
+                      value = input$time2)
+  })
+  observe({
+    updateNumericInput(session = session,
+                       inputId = "time2",
+                       value = input$time)
   })
   
   observe({
@@ -510,9 +517,9 @@ update_all <- function(input, session) {
                       value = input$S2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "S2",
-                      value = input$S)
+    updateNumericInput(session = session,
+                       inputId = "S2",
+                       value = input$S)
   })
   
   observe({
@@ -521,9 +528,9 @@ update_all <- function(input, session) {
                       value = input$I2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "I2",
-                      value = input$I)
+    updateNumericInput(session = session,
+                       inputId = "I2",
+                       value = input$I)
   })
   
   observe({
@@ -532,14 +539,11 @@ update_all <- function(input, session) {
                       value = input$E2)
   })
   observe({
-    updateSliderInput(session = session,
-                      inputId = "E2",
-                      value = input$E)
+    updateNumericInput(session = session,
+                       inputId = "E2",
+                       value = input$E)
   })
-  
 }
-
-
 
 
 
@@ -549,6 +553,7 @@ update_all <- function(input, session) {
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   update_all(input, session)
+  update_SIE(input, session)
   
   rv <- reactiveValues()
   rv_dt <- reactiveValues()
@@ -668,7 +673,7 @@ server <- function(input, output, session) {
     
   })
   
-  observeEvent(input$button2, {
+  observeEvent(input$button3, {
     rv$save <- TRUE
   })
   
@@ -749,13 +754,6 @@ server <- function(input, output, session) {
       rv$reset <- FALSE
     }
     
-    legend(
-      1,
-      1,
-      legend = c("Current Inputs", "Previous Inputs"),
-      col = c("red", "blue")
-      
-    )
     return(SIE_plot)
   })
   
@@ -773,6 +771,8 @@ server <- function(input, output, session) {
       write.csv(datasetInput(), file, row.names = FALSE)
     }
   )
+  
+  
   
   
   
