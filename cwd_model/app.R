@@ -14,12 +14,10 @@ if (!require(deSolve))
   install.packages(deSolve)
 
 # Improvements to do:
-# - be able to compare models with different parameters
-# - explain what each parameter does
-# - show what parameters are being used
-# - make an reactive value function so plot render is not bulky
-# - make the other parameters vary, and set proper ranges
-# - make better plot
+# - allow for graph and table to be downloaded
+# - create additional plots
+# - instead of having plot update automatically, update after the user hits a button. This would allow users to compare completely different models as a whole
+# rather than comparing plots changed by individual variables.
 
 
 
@@ -107,6 +105,12 @@ model_output <-
     return(model_output)
   }
 
+# main function for creating the table 
+# takes a recursive value set of current and past values and compares them to 
+# a static set of the original values. It adds a column of names and removes the values
+# where the current value is not equal to the original value. It then adds the proper
+# headings (i.e., param name, current value, original value, and most recent value). 
+# it then returns the newly created table to be rendered.
 get_changed <- function(rv_dt) {
   current <- c(
     isolate(rv_dt$cur_beta),
@@ -132,9 +136,9 @@ get_changed <- function(rv_dt) {
   Parameters <-
     c(
       "Transmission Rate (beta)",
-      "CWD Morality Rate (mu)",
+      "CWD Mortality Rate (mu)",
       "Birth Rate (alpha)",
-      "Natural Morality Rate (m)",
+      "Natural Mortality Rate (m)",
       "Indirect Transmission (gamma)",
       "Rate of Infectious Material Excretion (epsilon)",
       "Enviromental Infectious Material Loss Rate (tau)"
@@ -160,7 +164,10 @@ get_changed <- function(rv_dt) {
 
 # UI ----------------------------------------------------------------------
 
-# Define UI for application that draws a histogram
+# main UI function which has several parts. These parts can be separated if needed. main portions are a side panel for the main parameters, 
+# graph and table of values, second side panel of scaling input values, and reset button. A second page (tab) was created to hold about information
+# for the app as a whole. This is formatted using html functions and contains one main potion of text. The inputs are displayed to the user using easily
+# understandable and descriptive names. However the are stored with shorter predetermined names, see CWDFittingResults.pdf for more detail.
 ui <- navbarPage(
   "CWD Model",
   theme = shinytheme("flatly"),
@@ -188,7 +195,7 @@ ui <- navbarPage(
                  
                  sliderInput(
                    inputId = "mu",
-                   label = "CWD Morality Rate",
+                   label = "CWD Mortality Rate",
                    min = 1.3,
                    value = 2.6,
                    max = 4,
@@ -219,7 +226,7 @@ ui <- navbarPage(
                  
                  sliderInput(
                    inputId = "m",
-                   label = "Natural Morality Rate",
+                   label = "Natural Mortality Rate",
                    min = 0.05,
                    value = 0.1,
                    max = 0.15,
@@ -416,6 +423,7 @@ ui <- navbarPage(
   
 )
 
+# this function consists of multiple observe calls to update the slider and box inputs of the main parameters
 update_all <- function(input, session) {
   observe({
     updateSliderInput(session = session,
@@ -499,6 +507,7 @@ update_all <- function(input, session) {
   
 }
 
+# this function consists of multiple observe calls to update the slider and box inputs of the scaling inputs
 update_SIE <- function(input, session) {
   observe({
     updateSliderInput(session = session,
@@ -552,12 +561,14 @@ update_SIE <- function(input, session) {
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+  # first we check to see what values have been changed
   update_all(input, session)
   update_SIE(input, session)
   
   rv <- reactiveValues()
   rv_dt <- reactiveValues()
   
+  #creating a set of recursive values used in the graph
   rv$cur_beta <- 0.002
   rv$cur_mu <- 2.6
   rv$cur_alpha <- 4.5
@@ -586,6 +597,7 @@ server <- function(input, output, session) {
   rv$pre_I <- 0
   rv$pre_E <-  .005
   
+  # updates all the values used in the table without messing up the values used in the table
   update <- function(rv, input) {
     rv$pre_beta <- isolate(rv$cur_beta)
     rv$pre_mu <- isolate(rv$cur_mu)
@@ -615,6 +627,7 @@ server <- function(input, output, session) {
     return(rv)
   }
   
+  #creating a separate set of recursive values used in the data table
   rv_dt$cur_beta <- 0.002
   rv_dt$cur_mu <- 2.6
   rv_dt$cur_alpha <- 4.5
@@ -631,6 +644,7 @@ server <- function(input, output, session) {
   rv_dt$pre_epsilon <- 0.15
   rv_dt$pre_tau <- 0.14
   
+  # updates all the values used in the table without messing up the values used in the graph
   update_dt <- function(rv_dt, input) {
     rv_dt$pre_beta <- isolate(rv_dt$cur_beta)
     rv_dt$pre_mu <- isolate(rv_dt$cur_mu)
@@ -648,11 +662,11 @@ server <- function(input, output, session) {
     rv_dt$cur_epsilon <- input$epsilon
     rv_dt$cur_tau <- input$tau
     
-    #rv$reset <- FALSE
-    
     return(rv_dt)
   }
   
+  # when reset is hit this function sets all the values back to their original value
+  # also changes a boolean value so that the graph displays the correct line(s)
   observeEvent(input$button, {
     disable(id = "button")
     rv$reset <- TRUE
@@ -673,13 +687,17 @@ server <- function(input, output, session) {
     
   })
   
-  observeEvent(input$button3, {
-    rv$save <- TRUE
-  })
+  # checks for when the save button would be hit and changes a boolean value
+  # observeEvent(input$button3, {
+  #   rv$save <- TRUE
+  # })
   
+  #code to create and show the graph 
   output$plot1 <- renderPlot({
+    # need to update the current and previous values first
     rv <- update(rv, input)
     
+    # the graph which shows the previous model shown in blue
     previous <-
       model_output(
         time = isolate(rv$cur_time),
@@ -695,6 +713,7 @@ server <- function(input, output, session) {
         E0 = isolate(rv$pre_E)
       )
     
+    # the graph which shows the current model shown in red
     current <-
       model_output(
         time = isolate(rv$cur_time),
@@ -710,6 +729,7 @@ server <- function(input, output, session) {
         E0 = isolate(rv$cur_E)
       )
     
+    # when the reset button is hit we only want to display one line
     if (isolate(rv$reset) == FALSE)  {
       SIE_plot <-
         ggplot(data = current, aes(
@@ -736,7 +756,7 @@ server <- function(input, output, session) {
         theme_bw() +
         theme(text = element_text(size = 20),
               strip.background = element_blank())
-    } else {
+    } else { # if the reset button has not been hit then display both the lines
       SIE_plot <-
         ggplot(data = current, aes(
           x = time,
@@ -757,20 +777,27 @@ server <- function(input, output, session) {
     return(SIE_plot)
   })
   
+  # Function to create and render the table of changed values
+  # a call to get_changed is made which does the calculations for the table
   output$data <- DT::renderDataTable({
+    # need to update the current and previous values firs
     rv_dt <- update_dt(rv_dt, input)
     table <- get_changed(rv_dt)
     DT::datatable(table)
   })
   
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste(input$dataset, ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(datasetInput(), file, row.names = FALSE)
-    }
-  )
+  # code started for downloading the graph and table in one file.
+  # A major issue we ran into was that the graph downloads as a jpeg and the table downloads as a file. 
+  # The goal is to download both in one file to avoid confusion and make it easier for the user to review both at the same time
+  
+    # output$downloadData <- downloadHandler(
+    # filename = function() {
+    #   paste(input$dataset, ".csv", sep = "")
+    # },
+    # content = function(file) {
+    #   write.csv(datasetInput(), file, row.names = FALSE)
+    # }
+    # )
   
   
   
