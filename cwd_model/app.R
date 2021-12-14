@@ -403,8 +403,8 @@ ui <- navbarPage(
     div(
       h2("How to Use this Web App"),
       span(
-        "When first viewing the app, a user may notice a few things. First there are two columns containing mutable values. One (located on the far left) is labled Paramters and contain all the variables which affect the
-           final graph. The second (located on the far right) is labeled as Scalling Inputs and contains values which affect the iniitial scale of the graph. A user can change any of these values the graph will update in real
+        "When first viewing the app, a user may notice a few things. First there are two columns containing mutable values. One (located on the far left) is labled Parameters and contain all the variables which affect the
+           final graph. The second (located on the far right) is labeled as Scaling Inputs and contains values which affect the iniitial scale of the graph. A user can change any of these values the graph will update in real
            time accordingly. In the middle of the page, there is the graph and table. As indicated above the graph, the red line represents the current graph while the blue line represents the graph before the
            parameter was changed. Below the graph is the aforementioned table which list the all parameters that are different from the original, preset values. These new values, along with the orinal values and
            most recent values, are veiwable in the table. Lastly, there is a reset button located at the top left corner of the page. This button clears the table and sets
